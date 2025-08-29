@@ -73,10 +73,11 @@ export function Sidebar({ activeItem, onItemChange }: SidebarProps) {
                 key={item.id}
                 onClick={() => onItemChange(item.id)}
                 className={cn(
-                  "w-full flex items-center gap-3 p-3 rounded-lg transition-all group",
+                  "w-full flex items-center rounded-lg transition-all group",
                   "glass-morph hover:bg-glass-hover",
                   isActive && "bg-glass-hover border-primary glow-yellow",
-                  !isActive && "glow-blue"
+                  !isActive && "glow-blue",
+                  isCollapsed ? "justify-center p-3" : "gap-3 p-3"
                 )}
               >
                 <Icon className={cn(
