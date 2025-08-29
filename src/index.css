@@ -4,39 +4,84 @@
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
+Glass morphism SaaS theme with dark gradients and yellow accents.
 */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Dark gradient background system */
+    --background: 240 6% 6%; /* #0A0A0F equivalent */
+    --background-secondary: 0 0% 7%; /* #121212 equivalent */
+    --foreground: 240 5% 96%; /* Light gray-white text */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* Glass morphism cards */
+    --glass-background: 0 0% 12% / 0.4; /* rgba(30,30,30,0.4) */
+    --glass-border: 0 0% 100% / 0.1; /* White border with opacity */
+    --glass-hover: 0 0% 15% / 0.6; /* Slightly lighter on hover */
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    /* Card system */
+    --card: 0 0% 12% / 0.4;
+    --card-foreground: 240 5% 96%;
+    --card-border: 0 0% 100% / 0.1;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Popover system */
+    --popover: 240 6% 8%;
+    --popover-foreground: 240 5% 96%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Primary - Yellow accent system */
+    --primary: 48 100% 62%; /* #FFD93D bright yellow */
+    --primary-foreground: 240 6% 6%; /* Dark text on yellow */
+    --primary-glow: 48 100% 62% / 0.3; /* Yellow glow effect */
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Secondary - Subtle glass variants */
+    --secondary: 0 0% 15% / 0.6;
+    --secondary-foreground: 240 5% 90%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Muted - Darker glass for less prominent elements */
+    --muted: 0 0% 10% / 0.8;
+    --muted-foreground: 240 4% 65%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Accent - Blue glow system */
+    --accent: 210 100% 65%; /* Light blue for hover effects */
+    --accent-foreground: 240 5% 96%;
+    --accent-glow: 210 100% 65% / 0.3; /* Blue glow effect */
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Status colors */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 240 5% 96%;
+    --success: 120 60% 50%;
+    --success-foreground: 240 5% 96%;
 
-    --radius: 0.5rem;
+    /* Input and interaction */
+    --border: 0 0% 100% / 0.1;
+    --input: 0 0% 12% / 0.6;
+    --input-foreground: 240 5% 90%;
+    --ring: 48 100% 62%; /* Yellow focus ring */
+
+    /* Radius system */
+    --radius: 1.5rem; /* 2xl rounded corners for glass effect */
+    --radius-sm: 0.75rem;
+    --radius-lg: 2rem;
+
+    /* Gradient system */
+    --gradient-main: linear-gradient(135deg, hsl(240 6% 6%), hsl(0 0% 7%));
+    --gradient-glass: linear-gradient(135deg, 
+      hsl(0 0% 15% / 0.1), 
+      hsl(0 0% 10% / 0.2));
+    --gradient-accent: linear-gradient(135deg, 
+      hsl(48 100% 62%), 
+      hsl(45 100% 55%));
+
+    /* Shadow system for glass morphism */
+    --shadow-glass: 0 8px 32px hsl(0 0% 0% / 0.4), 
+                   0 0 0 1px hsl(0 0% 100% / 0.05),
+                   inset 0 1px 0 hsl(0 0% 100% / 0.1);
+    --shadow-glow-yellow: 0 0 20px hsl(48 100% 62% / 0.4);
+    --shadow-glow-blue: 0 0 20px hsl(210 100% 65% / 0.4);
+
+    /* Animation variables */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-glow: box-shadow 0.3s ease, border-color 0.3s ease;
 
     --sidebar-background: 0 0% 98%;
 
@@ -55,43 +100,7 @@ All colors MUST be HSL.
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
+  /* Dark theme is the default - no separate dark class needed */
 }
 
 @layer base {
@@ -101,5 +110,69 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    background: var(--gradient-main);
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  /* Backdrop blur utility */
+  .backdrop-blur-glass {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* Glass morphism base */
+  .glass-morph {
+    background: hsl(var(--glass-background));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: var(--shadow-glass);
+  }
+
+  /* Hover glow effects */
+  .glow-yellow:hover {
+    box-shadow: var(--shadow-glow-yellow), var(--shadow-glass);
+    border-color: hsl(var(--primary) / 0.4);
+    transition: var(--transition-glow);
+  }
+
+  .glow-blue:hover {
+    box-shadow: var(--shadow-glow-blue), var(--shadow-glass);
+    border-color: hsl(var(--accent) / 0.4);
+    transition: var(--transition-glow);
+  }
+
+  /* Animated background particles */
+  .particles::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+      radial-gradient(circle at 20% 80%, hsl(48 100% 62% / 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, hsl(210 100% 65% / 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, hsl(48 100% 62% / 0.03) 0%, transparent 50%);
+    animation: float 20s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  @keyframes float {
+    0%, 100% { 
+      transform: translateY(0px) rotate(0deg); 
+      opacity: 0.3;
+    }
+    50% { 
+      transform: translateY(-20px) rotate(180deg); 
+      opacity: 0.6;
+    }
+  }
+
+  /* Smooth transitions */
+  * {
+    transition: var(--transition-smooth);
   }
 }
