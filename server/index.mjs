@@ -98,11 +98,22 @@ app.post("/api/generate", upload.none(), async (req, res) => {
     const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN });
     const prompt = String(req.body?.prompt || "").trim();
     const ratio = String(req.body?.aspectRatio || "1:1").trim();
-    const attachedImages = req.body?.attachedImages || [];
+    // 解析 attachedImages JSON 字符串
+    let attachedImages = [];
+    try {
+      if (req.body?.attachedImages) {
+        attachedImages = JSON.parse(req.body.attachedImages);
+      }
+    } catch (e) {
+      console.error('[GEN] Failed to parse attachedImages:', e);
+      attachedImages = [];
+    }
     
     if (!prompt) return res.status(400).json({ error: "Prompt 不能为空" });
     
-    console.log("[GEN] attachedImages count:", attachedImages.length);
+    console.log("[GEN] attachedImages type:", typeof attachedImages);
+    console.log("[GEN] attachedImages value:", attachedImages);
+    console.log("[GEN] attachedImages count:", Array.isArray(attachedImages) ? attachedImages.length : 'not an array');
     
     const image_input = [];
     
@@ -114,7 +125,8 @@ app.post("/api/generate", upload.none(), async (req, res) => {
     }
     
     // 2) 处理引用图片，将 base64 数据 URL 转换为 Replicate 可访问的 URL
-    for (const imageUrl of attachedImages) {
+    if (Array.isArray(attachedImages)) {
+      for (const imageUrl of attachedImages) {
       if (imageUrl.startsWith('data:')) {
         // 这是 base64 数据 URL（来自画板导出）
         console.log('[GEN] Processing base64 image...');
@@ -132,6 +144,7 @@ app.post("/api/generate", upload.none(), async (req, res) => {
         image_input.push(imageUrl);
       }
     }
+    }
     
     console.log("[GEN] total image_input count:", image_input.length);
     
@@ -140,8 +153,20 @@ app.post("/api/generate", upload.none(), async (req, res) => {
     if (image_input.length) input.image_input = image_input;
     
     console.log("[GEN] sending to replicate with", image_input.length, "reference images");
-    const output = await replicate.run("google/nano-banana", { input });
-    console.log("[GEN] nano-banana output:", output);
+    console.log("[GEN] input object:", JSON.stringify(input, null, 2));
+    
+    let output;
+    try {
+      output = await replicate.run("google/nano-banana", { input });
+      console.log("[GEN] nano-banana output:", output);
+    } catch (replicateError) {
+      console.error("[GEN] Replicate API error:", replicateError);
+      if (replicateError.response) {
+        const errorText = await replicateError.response.text();
+        console.error("[GEN] Replicate error response:", errorText);
+      }
+      throw replicateError;
+    }
     
     // nano-banana 模型返回的是 URL 数组
     let url;
