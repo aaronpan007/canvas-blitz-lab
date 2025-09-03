@@ -1,32 +1,85 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { BottomDock } from "@/components/layout/BottomDock";
 import { GeneralPage } from "@/components/features/GeneralPage";
+import ChatThread, { ChatMessage } from "@/components/ChatThread";
 import { toast } from "sonner";
 
 export default function Dashboard() {
   const [activeFeature, setActiveFeature] = useState("general");
-  const [currentPrompt, setCurrentPrompt] = useState("");
+  const [prompt, setPrompt] = useState<string>("");
+  const [images, setImages] = useState<string[]>([]);
+  const mainRef = useRef<HTMLDivElement | null>(null);
+  
+  // 对话状态管理
+  const [thread, setThread] = useState<ChatMessage[]>([]);
+  const lastAssistant = [...thread].reverse().find(m => m.role === "assistant") as any;
+  const lastImageUrl = lastAssistant?.imageUrl as string | undefined;
+  
+  function pushUser(text: string) {
+    setThread(prev => [...prev, { id: crypto.randomUUID(), role: "user", text }]);
+  }
+  
+  function pushAssistant(url: string) {
+    setThread(prev => [...prev, { id: crypto.randomUUID(), role: "assistant", imageUrl: url }]);
+  }
 
   const handleFeatureChange = (featureId: string) => {
     setActiveFeature(featureId);
   };
 
-  const handlePromptSelect = (prompt: string) => {
-    setCurrentPrompt(prompt);
+  const handlePromptSelect = (promptText: string) => {
+    setPrompt(promptText);
   };
 
   const handleGenerate = async (prompt: string) => {
-    toast.success("Generation started! This is a demo - actual generation would happen here.");
-    // Here you would integrate with your AI generation API
-    console.log("Generating with prompt:", prompt);
+    try {
+      toast.success("Generation started!");
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt, aspectRatio: '1:1' }),
+      });
+      const result = await response.json();
+      if (result.image) {
+        setImages(p => [result.image, ...p].slice(0, 6));
+        toast.success("Image generated successfully!");
+      } else {
+        toast.error("Failed to generate image");
+      }
+    } catch (error) {
+      console.error('Generation failed:', error);
+      toast.error("Generation failed");
+    }
+  };
+
+  const handleResult = (imageUrl: string) => {
+    setImages(p => [imageUrl, ...p].slice(0, 6));
+    toast.success("Image generated successfully!");
   };
 
   const renderActiveFeature = () => {
     switch (activeFeature) {
       case "general":
-        return <GeneralPage onPromptSelect={handlePromptSelect} />;
+        // 对话模式：无消息时显示 Hero，有消息时显示对话
+        if (thread.length === 0) {
+          return <GeneralPage 
+            onPromptSelect={handlePromptSelect} 
+            images={images}
+            onImageUpdate={(url) => setImages(p => [url, ...p.filter(u => u !== url)].slice(0, 6))}
+          />;
+        } else {
+          return (
+            <div className="w-full space-y-8">
+              <ChatThread items={thread} />
+              {/* 尾部 Spacer 占位元素 */}
+              <div style={{ height: "calc(var(--dock-h, 180px) + var(--dock-gap, 24px))" }} />
+            </div>
+          );
+        }
       case "avatar":
         return (
           <div className="flex items-center justify-center h-full">
@@ -64,7 +117,11 @@ export default function Dashboard() {
           </div>
         );
       default:
-        return <GeneralPage onPromptSelect={handlePromptSelect} />;
+        return <GeneralPage 
+          onPromptSelect={handlePromptSelect} 
+          images={images}
+          onImageUpdate={(url) => setImages(p => [url, ...p.filter(u => u !== url)].slice(0, 6))}
+        />;
     }
   };
 
@@ -84,15 +141,31 @@ export default function Dashboard() {
         </div>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 pb-24 overflow-auto">
-          <div className="h-full">
+        <main className="flex-1 py-4 pb-24 overflow-auto">
+          <div 
+            data-dock-anchor
+            ref={mainRef} 
+            className="mx-auto max-w-5xl w-full px-6"
+            style={{ paddingBottom: "calc(var(--dock-h, 180px) + var(--dock-gap, 24px))" }}
+          >
             {renderActiveFeature()}
           </div>
         </main>
       </div>
 
       {/* Bottom Dock */}
-      <BottomDock onGenerate={handleGenerate} />
+      <BottomDock 
+        anchorRef={mainRef}
+        value={prompt}
+        onChange={setPrompt}
+        onGenerate={handleGenerate}
+        onResult={(url) => {
+          handleResult(url);
+          pushAssistant(url);
+        }}
+        lastImageUrl={lastImageUrl}
+        onSubmit={pushUser}
+      />
     </div>
   );
 }

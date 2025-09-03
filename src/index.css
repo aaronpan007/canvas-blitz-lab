@@ -176,3 +176,19 @@ Glass morphism SaaS theme with dark gradients and yellow accents.
     transition: var(--transition-smooth);
   }
 }
+
+/* 统一页面容器：与 Dock 对齐 */
+.page-container {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 72rem;   /* 1152px，与主容器 6xl 保持一致 */
+  padding-left: 1.5rem; /* 与主容器 px-6 保持一致 */
+  padding-right: 1.5rem;
+}
+
+/* 统一外框：与 Dock 共用，避免双重内边距导致错位 */
+.ai-shell {
+  width: min(90vw, 64rem); /* 可按设计改，如 60/72rem */
+  margin-left: auto;
+  margin-right: auto;
+}
