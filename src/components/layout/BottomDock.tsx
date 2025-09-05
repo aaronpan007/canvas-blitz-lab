@@ -195,14 +195,6 @@ export function BottomDock({ anchorRef, value, onChange, onGenerate, onResult, l
     }
   };
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files) {
-      const newImages = Array.from(files).map(file => URL.createObjectURL(file));
-      setAttachedImages(prev => [...prev, ...newImages]);
-    }
-  };
-
   const removeImage = (index: number) => {
     setAttachedImages(prev => prev.filter((_, i) => i !== index));
   };

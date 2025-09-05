@@ -14,7 +14,15 @@ try {
 }
 
 const app = express();
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: {
+    fieldSize: 50 * 1024 * 1024, // 50MB for field values (base64 images)
+    fileSize: 50 * 1024 * 1024,  // 50MB for files
+    fields: 20,                  // Maximum number of fields
+    files: 10                    // Maximum number of files
+  }
+});
 app.use(cors());
 // 增加请求体大小限制以支持 base64 图片数据
 app.use(express.json({ limit: '50mb' }));
@@ -154,6 +162,15 @@ app.post("/api/generate", upload.none(), async (req, res) => {
     
     console.log("[GEN] sending to replicate with", image_input.length, "reference images");
     console.log("[GEN] input object:", JSON.stringify(input, null, 2));
+    
+    // 确保 image_input 格式与官方示例一致
+    if (input.image_input) {
+      console.log("[GEN] image_input array:", input.image_input);
+      console.log("[GEN] image_input length:", input.image_input.length);
+      input.image_input.forEach((url, index) => {
+        console.log(`[GEN] image_input[${index}]:`, typeof url, url.substring(0, 100) + '...');
+      });
+    }
     
     let output;
     try {
