@@ -5,6 +5,7 @@ import cors from "cors";
 import multer from "multer";
 import Replicate from "replicate";
 import { existsSync } from "fs";
+import avatarRouter from "./routes/avatar.js";
 
 // 显式加载环境变量，兼容 .env.local
 try {
@@ -27,6 +28,17 @@ app.use(cors());
 // 增加请求体大小限制以支持 base64 图片数据
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// 日志：看清请求是否命中后端
+app.use((req, _res, next) => {
+  if (req.path.startsWith('/api')) {
+    console.log(`[API] ${req.method} ${req.path}`);
+  }
+  next();
+});
+
+// 挂载 Avatar 路由
+app.use("/api/avatar", express.json({ limit: "10mb" }), avatarRouter);
 
 // ---- /api/polish：用 Replicate 的 LLM 做"润色"（可选） ----
 app.post("/api/polish", async (req, res) => {
@@ -203,14 +215,24 @@ app.post("/api/generate", upload.none(), async (req, res) => {
   }
 });
 
+
+
+
+
 // 健康检查路由
 app.get("/api/health", (req, res) => {
-  res.json({
-    ok: true,
-    node: process.version,
-    hasToken: !!process.env.REPLICATE_API_TOKEN,
-    llm: process.env.REPLICATE_LLM_MODEL || null
-  });
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+// /api 下未命中的 404 必须返回 JSON，避免回 HTML
+app.use('/api', (_req, res) => {
+  res.status(404).json({ error: 'API_NOT_FOUND' });
+});
+
+// 统一错误处理：返回 JSON
+app.use((err, _req, res, _next) => {
+  console.error('[API ERROR]', err);
+  res.status(500).json({ error: err?.message || 'INTERNAL_ERROR' });
 });
 
 const PORT = process.env.API_PORT || 8787;

@@ -1,0 +1,26 @@
+// Avatar风格提示词配置
+// 每个风格包含详细的提示词，用于生成特定风格的头像
+
+export const AVATAR_STYLE_PROMPTS = {
+  mono: `A completely new artistic reconstruction of a black-and-white portrait, ignoring the original photograph's background and pose.
+The subject is depicted in a new, introspective posture, captured in a moment of pensive thought, with their face artfully obscured or turned away to evoke mystery and elegance. Their form is sculpted by a single, gentle, directional soft light, creating exquisite highlights and deep, velvety shadows that define their contours and evoke a melancholic, poetic beauty.
+The background is a newly generated, softly graduated, ethereal gradient, completely devoid of any physical objects, establishing immense depth and a profoundly silent atmosphere. This creates a powerful sense of isolation and focus on the subject.
+The overall composition should be fresh and non-traditional, utilizing significant negative space to amplify the subject's quiet intensity. The image must be infused with a tangible, authentic soft film grain texture, emulating classic analog photography for a vintage, tactile quality.
+No text, no logos – pure light, shadow, form, and profound emotion, all completely reimagined and reconstructed.`,
+
+  studio: `A meticulously crafted studio portrait of the subject, captured in a moment of poised contemplation. The setting is minimalist, defined by a deep, solid black background. A single, dramatic soft side light beautifully sculpts the contours of the subject's face and upper body, creating a striking interplay of vibrant light and profound shadows.
+
+The composition is an upper-body shot, focusing intimately on the subject, with ample negative space enhancing their presence and the scene's quiet intensity. This is a full-color photograph, characterized by rich tones and exquisite detail, evoking a sense of modern elegance and artistic depth. The lighting highlights the subject's refined features, lending an air of mystery and sophisticated beauty. No text, no logos, just pure form and emotion.`,
+
+  faceless: `An evocative and mysterious artistic portrait. The subject's face is intentionally obscured or turned away, allowing the focus to shift to their silhouette and posture. The lighting is dramatic and directional, creating striking rim light and deep shadows to sculpt the form. The composition is highly intentional, utilizing negative space and leading lines to guide the viewer's eye. The atmosphere is quiet and introspective, telling a story through body language alone. The overall aesthetic is clean, minimalist, and emotionally profound.`,
+
+  urban: `A candid and authentic street-style portrait. The subject is captured in a natural, unposed moment on a bustling city street. The background is slightly blurred with urban elements like traffic, neon signs, or old brick walls, adding a sense of place. The lighting is natural and spontaneous, reflecting the ambient light of the city. The colors are vibrant and true to life. The image has a raw, energetic feel, like a glimpse into a genuine urban story. The composition is dynamic and full of life.`,
+
+  vintage: `A cinematic portrait that looks like a still from a classic film. The image features a stylized color grade, with rich, nostalgic tones like teal and orange or a moody, warm palette. The lighting is purposeful and dramatic, casting deep shadows to create mystery and tension. The subject is in a pensive pose, conveying a strong emotional narrative. The composition is widescreen, with a film grain overlay and a subtle shallow depth of field to enhance the dreamy, storytelling quality.`,
+
+  indoor: `A cozy and intimate indoor lifestyle portrait. The setting is a comfortable, personal space like a sun-drenched bedroom or a rustic living room, filled with natural light streaming from a window. The subject is in a relaxed, candid moment, perhaps reading a book or enjoying a quiet cup of coffee. The lighting is soft and gentle, creating a warm, inviting glow. The composition is natural and easy, highlighting the genuine atmosphere of the moment. The colors are soft and muted, evoking a sense of tranquility and contentment.`,
+
+  film: `A beautiful full-color portrait with a classic film aesthetic. The image has a subtle, delicate film grain that gives it a tangible, vintage feel. The colors are slightly muted and have a natural, organic warmth. The light is soft and inviting, and the composition is focused on the subject's sincere expression. The overall style is timeless and full of emotional depth, like a well-preserved photograph from a bygone era.`,
+
+  business: `A meticulously crafted professional studio portrait. The subject is a confident and composed professional, positioned against a clean, uncluttered solid color backdrop (e.g., charcoal gray, dark blue, or off-white). The lighting is expertly controlled, featuring a soft key light to gently sculpt the face, while a subtle fill light ensures no harsh shadows. The subject is dressed in sharp, classic business attire, exuding an air of sophistication and approachability. The shot is a tight headshot or upper-body portrait, focusing on the subject's clear gaze and sincere expression. The overall style is clean, modern, and high-resolution, with a shallow depth of field to keep the focus entirely on the person.`
+};

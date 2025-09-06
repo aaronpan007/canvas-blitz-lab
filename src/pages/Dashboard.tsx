@@ -3,6 +3,7 @@ import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { BottomDock } from "@/components/layout/BottomDock";
 import { GeneralPage } from "@/components/features/GeneralPage";
+import { AvatarPage } from "@/features/avatar/AvatarPage";
 import ChatThread, { ChatMessage } from "@/components/ChatThread";
 import { toast } from "sonner";
 
@@ -16,6 +17,9 @@ export default function Dashboard() {
   const [thread, setThread] = useState<ChatMessage[]>([]);
   const lastAssistant = [...thread].reverse().find(m => m.role === "assistant") as any;
   const lastImageUrl = lastAssistant?.imageUrl as string | undefined;
+  
+  // Avatar功能的独立状态管理
+  const [avatarImages, setAvatarImages] = useState<string[]>([]);
   
   function pushUser(text: string) {
     setThread(prev => [...prev, { id: crypto.randomUUID(), role: "user", text }]);
@@ -81,14 +85,11 @@ export default function Dashboard() {
           );
         }
       case "avatar":
-        return (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center glass-morph p-8 rounded-xl">
-              <h2 className="text-2xl font-bold text-foreground mb-4">Avatar Generation</h2>
-              <p className="text-muted-foreground">Coming soon! Upload your photo and transform it into amazing avatars.</p>
-            </div>
-          </div>
-        );
+        return <AvatarPage 
+          onPromptSelect={handlePromptSelect} 
+          images={avatarImages}
+          onImageUpdate={(url) => setAvatarImages(p => [url, ...p.filter(u => u !== url)].slice(0, 12))}
+        />;
       case "try-on":
         return (
           <div className="flex items-center justify-center h-full">
@@ -153,19 +154,21 @@ export default function Dashboard() {
         </main>
       </div>
 
-      {/* Bottom Dock */}
-      <BottomDock 
-        anchorRef={mainRef}
-        value={prompt}
-        onChange={setPrompt}
-        onGenerate={handleGenerate}
-        onResult={(url) => {
-          handleResult(url);
-          pushAssistant(url);
-        }}
-        lastImageUrl={lastImageUrl}
-        onSubmit={pushUser}
-      />
+      {/* Bottom Dock - 仅在非Avatar页面显示 */}
+      {activeFeature !== "avatar" && (
+        <BottomDock 
+          anchorRef={mainRef}
+          value={prompt}
+          onChange={setPrompt}
+          onGenerate={handleGenerate}
+          onResult={(url) => {
+            handleResult(url);
+            pushAssistant(url);
+          }}
+          lastImageUrl={lastImageUrl}
+          onSubmit={pushUser}
+        />
+      )}
     </div>
   );
 }
