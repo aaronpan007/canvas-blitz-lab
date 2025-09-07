@@ -23,19 +23,18 @@ export default async function handler(req: any, res: any) {
 
     // 从环境变量读取配置
     const token = process.env.REPLICATE_API_TOKEN;
-    const model = process.env.REPLICATE_LLM_MODEL;
+    const llmModel = process.env.REPLICATE_LLM_MODEL;
     
     if (!token) {
       console.error('[CHAT] Missing REPLICATE_API_TOKEN');
       return res.status(500).json({ error: 'Configuration error', detail: 'Missing API token' });
     }
     
-    if (!model) {
-      console.error('[CHAT] Missing REPLICATE_LLM_MODEL');
-      return res.status(500).json({ error: 'Configuration error', detail: 'Missing model configuration' });
+    if (!llmModel) {
+      return res.status(500).json({ error: 'REPLICATE_LLM_MODEL not configured' });
     }
 
-    console.log('[CHAT] Processing request with model:', model);
+    console.log('[CHAT] Processing request with model:', llmModel);
     console.log('[CHAT] Prompt length:', prompt.length);
 
     const replicate = new Replicate({ auth: token });
@@ -50,8 +49,8 @@ export default async function handler(req: any, res: any) {
 
     console.log('[CHAT] Calling Replicate with input:', { ...input, prompt: '[PROMPT_CONTENT]' });
 
-    // 调用Replicate模型 - 与现有实现方式一致
-    const result = await replicate.run(model as `${string}/${string}:${string}`, { input });
+    // 调用Replicate模型
+    const result = await replicate.run(llmModel as `${string}/${string}:${string}`, { input });
     
     console.log('[CHAT] Replicate result type:', typeof result);
     console.log('[CHAT] Replicate result:', result);
