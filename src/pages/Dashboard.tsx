@@ -26,6 +26,11 @@ export default function Dashboard() {
   // General页面的统一状态管理
   const [modelResponse, setModelResponse] = useState<string>("");
 
+  // 添加消息到对话流的函数
+  const addMessage = (message: ChatMessage) => {
+    setThread(prev => [...prev, message]);
+  };
+
   // 工具函数：标准化图片URL，处理base64前缀兜底
   function normalizeImageUrl(x: any): string {
     if (!x) return '';
@@ -96,21 +101,18 @@ export default function Dashboard() {
 
       const images = extractImages(data);
       if (!images.length) {
-        setModelResponse?.('No images returned'); // 真没拿到时才显示
+        setModelResponse?.(''); // 改为空字符串，避免误导
         return;
       }
 
-      // —— 将图片插回"对话流" ——
-      images.forEach((url: string) => {
-        const assistantMessage: ChatMessage = {
-          id: crypto.randomUUID(),
-          role: 'assistant',
-          type: 'image',
-          url,
-          createdAt: new Date().toISOString(),
-        };
-        setThread(prev => [...prev, assistantMessage]);
-      });
+      // —— 恢复"对话流展示" ——（沿用 localhost 的消息结构）
+      images.forEach((url: string) => addMessage({
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        type: 'image',
+        url,
+        createdAt: new Date().toISOString(),
+      }));
 
       setModelResponse?.(`Generated ${images.length} image(s).`);
       toast.success('图片生成成功！');
