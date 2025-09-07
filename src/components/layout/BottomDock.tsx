@@ -12,7 +12,8 @@ import {
   Square, 
   Send,
   X,
-  Image as ImageIcon 
+  Image as ImageIcon,
+  MessageCircle
 } from "lucide-react";
 
 interface BottomDockProps {
@@ -23,14 +24,16 @@ interface BottomDockProps {
   onResult?: (url: string) => void;
   lastImageUrl?: string;                  // 父级传入：上一条模型图片
   onSubmit?: (text: string) => void;      // 父级：将用户消息推入对话
+  onChat?: (prompt: string) => void;      // 新增：处理LLM对话
 }
 
-export function BottomDock({ anchorRef, value, onChange, onGenerate, onResult, lastImageUrl, onSubmit }: BottomDockProps) {
+export function BottomDock({ anchorRef, value, onChange, onGenerate, onResult, lastImageUrl, onSubmit, onChat }: BottomDockProps) {
   const { left, width } = useAnchorRect(anchorRef?.current || null);
   const dockInnerRef = useRef<HTMLDivElement>(null);
   
   const [isPolishing, setIsPolishing] = useState(false);
   const [attachedImages, setAttachedImages] = useState<string[]>([]);
+  const [mode, setMode] = useState<'image' | 'chat'>('image'); // 新增：模式切换状态
   
   // New state variables
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -162,29 +165,34 @@ export function BottomDock({ anchorRef, value, onChange, onGenerate, onResult, l
     
     setGenLoading(true);
     try {
-      const fd = new FormData();
-      fd.append("prompt", text);
-      
-      // 添加历史图片作为上下文
-      if (lastImageUrl) {
-        fd.append("historyImage", lastImageUrl);
-      }
-      
-      // 添加引用图片（保留原有逻辑）
-      if (attachedImages.length > 0) {
-        fd.append("attachedImages", JSON.stringify(attachedImages));
-      }
-      
-      const resp = await fetch("/api/generate", { 
-        method: "POST", 
-        body: fd 
-      });
-      
-      const data = await resp.json().catch(() => ({}));
-      
-      if (data?.image) {
-        // 调用父级回调，将模型图片推入对话
-        onResult?.(data.image);
+      if (mode === 'chat') {
+        // 文本对话模式
+        await onChat?.(text);
+      } else {
+        // 图像生成模式
+        // 处理附加图片 - 如果有base64图片，只取第一个
+        let imageBase64 = null;
+        if (attachedImages.length > 0 && attachedImages[0].startsWith('data:')) {
+          imageBase64 = attachedImages[0];
+        }
+        
+        const resp = await fetch("/api/generate", { 
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            prompt: text,
+            imageBase64
+          })
+        });
+        
+        const data = await resp.json().catch(() => ({}));
+        
+        if (data?.images && data.images.length > 0) {
+          // 调用父级回调，将模型图片推入对话
+          onResult?.(data.images[0]);
+        }
       }
     } catch (error) {
       console.error('Generation failed:', error);
@@ -298,6 +306,20 @@ export function BottomDock({ anchorRef, value, onChange, onGenerate, onResult, l
                     <Square className="w-4 h-4" />
                   </Button>
 
+                  {/* Mode Toggle Button */}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setMode(mode === 'image' ? 'chat' : 'image')}
+                    className={cn(
+                      "w-10 h-10 rounded-lg glass-morph hover:bg-glass-hover transition-all",
+                      mode === 'chat' ? "glow-green bg-green-500/20" : "glow-blue"
+                    )}
+                    title={mode === 'image' ? '切换到对话模式' : '切换到图像生成模式'}
+                  >
+                    {mode === 'image' ? <MessageCircle className="w-4 h-4" /> : <ImageIcon className="w-4 h-4" />}
+                  </Button>
+
                   {/* Generate Button */}
                   <Button
                     onClick={handleGenerateClick}
@@ -311,12 +333,12 @@ export function BottomDock({ anchorRef, value, onChange, onGenerate, onResult, l
                     {genLoading ? (
                       <div className="flex items-center gap-2">
                         <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                        GENERATING
+                        {mode === 'chat' ? 'CHATTING' : 'GENERATING'}
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
                         <Send className="w-4 h-4" />
-                        GENERATE
+                        {mode === 'chat' ? 'CHAT' : 'GENERATE'}
                       </div>
                     )}
                   </Button>

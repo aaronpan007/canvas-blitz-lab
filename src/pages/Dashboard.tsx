@@ -46,11 +46,11 @@ export default function Dashboard() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt, aspectRatio: '1:1' }),
+        body: JSON.stringify({ prompt }),
       });
       const result = await response.json();
-      if (result.image) {
-        setImages(p => [result.image, ...p].slice(0, 6));
+      if (result.images && result.images.length > 0) {
+        setImages(p => [result.images[0], ...p].slice(0, 6));
         toast.success("Image generated successfully!");
       } else {
         toast.error("Failed to generate image");
@@ -58,6 +58,42 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Generation failed:', error);
       toast.error("Generation failed");
+    }
+  };
+
+  // 新增：处理LLM对话功能
+  const handleChat = async (prompt: string) => {
+    try {
+      toast.success("Processing conversation...");
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+      
+      const result = await response.json();
+      if (result.output) {
+        // 将LLM回复添加到对话线程中（作为文本消息）
+        setThread(prev => [...prev, { 
+          id: crypto.randomUUID(), 
+          role: "assistant", 
+          imageUrl: "", // 对话消息没有图片
+          text: result.output 
+        }]);
+        toast.success("Response received!");
+      } else {
+        toast.error("No response from AI");
+      }
+    } catch (error) {
+      console.error('Chat failed:', error);
+      toast.error(`Chat failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -170,6 +206,7 @@ export default function Dashboard() {
           }}
           lastImageUrl={lastImageUrl}
           onSubmit={pushUser}
+          onChat={handleChat}
         />
       )}
     </div>

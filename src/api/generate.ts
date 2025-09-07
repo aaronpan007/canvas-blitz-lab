@@ -139,11 +139,14 @@ export async function handleGenerateRequest(req: any, res: any) {
 }
 
 // 前端调用的辅助函数
-export async function callGenerateAPI(formData: FormData): Promise<GenerateResponse> {
+export async function callGenerateAPI(prompt: string, imageBase64?: string): Promise<{ images?: string[], error?: string }> {
   try {
     const response = await fetch('/api/generate', {
       method: 'POST',
-      body: formData,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ prompt, imageBase64 }),
     });
 
     if (!response.ok) {

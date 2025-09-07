@@ -58,13 +58,23 @@ export default function PromptDock({ onResult }: { onResult: (url: string) => vo
   }
   async function handleGenerate() {
     if (!prompt.trim()) return; setLoading(true);
-    // 临时：仅用于排错
+    
+    // 处理附加图片 - 如果有base64图片，只取第一个
+    let imageBase64 = null;
+    if (attachedImages.length > 0 && attachedImages[0].startsWith('data:')) {
+      imageBase64 = attachedImages[0];
+    }
+    
     const data = await fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt, aspectRatio: ratio, attachedImages: attachedImages })
+      body: JSON.stringify({ prompt, imageBase64 })
     }).then(r=>r.json()).catch(()=>({}));
-    if (data?.image) onResult(data.image); setLoading(false);
+    
+    if (data?.images && data.images.length > 0) {
+      onResult(data.images[0]);
+    }
+    setLoading(false);
   }
   const removeImage = (index: number) => {
     setAttachedImages(prev => prev.filter((_, i) => i !== index));

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import AvatarPromptInput from "./AvatarPromptInput";
+import PortraitPromptInput from "./PortraitPromptInput";
 
 const avatarStyles = [
   { id: "realistic", name: "写实风格", description: "真实感强的头像" },
@@ -29,22 +29,34 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({ onPromptSelect, images, 
       // 使用第一个参考图片作为imageUrl，如果没有则为空字符串
       const imageUrl = referenceImages.length > 0 ? referenceImages[0] : "";
       
-      const response = await fetch('/api/avatar/generate', {
+      // 将styleId映射为标准的风格名称
+      const styleMap: Record<string, string> = {
+        'mono': 'Mono',
+        'studio': 'Studio', 
+        'faceless': 'Faceless',
+        'urban': 'Urban',
+        'vintage': 'Vintage',
+        'indoor': 'Indoor',
+        'film': 'Film',
+        'business': 'Business'
+      };
+      
+      const response = await fetch('/api/portrait', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          styleId: selectedStyle,
-          imageUrl: imageUrl,
-          promptAddon: prompt
+          style: styleMap[selectedStyle] || selectedStyle,
+          imageBase64: imageUrl,
+          prompt: prompt
         })
       });
 
       if (response.ok) {
         const data = await response.json();
-        if (data.image) {
-          onImageUpdate(data.image);
+        if (data.images && data.images.length > 0) {
+          onImageUpdate(data.images[0]);
           onPromptSelect(prompt);
         }
       } else {
@@ -93,7 +105,7 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({ onPromptSelect, images, 
           </div>
 
           {/* Input Component */}
-          <AvatarPromptInput 
+          <PortraitPromptInput 
             onGenerate={handleGenerate}
             isGenerating={isGenerating}
           />

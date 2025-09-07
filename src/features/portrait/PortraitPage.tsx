@@ -91,13 +91,25 @@ export const PortraitPage: React.FC<PortraitPageProps> = ({ onPromptSelect, imag
       
       console.log("[PORTRAIT] generate click", { selectedStyle: styleId, imageUrl: referenceImageUrl ? "[BASE64_DATA]" : "" });
       
-      const res = await fetch("/api/portrait/generate", {
+      // 将styleId映射为标准的风格名称
+      const styleMap: Record<string, string> = {
+        'mono': 'Mono',
+        'studio': 'Studio', 
+        'faceless': 'Faceless',
+        'urban': 'Urban',
+        'vintage': 'Vintage',
+        'indoor': 'Indoor',
+        'film': 'Film',
+        'business': 'Business'
+      };
+      
+      const res = await fetch("/api/portrait", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          styleId: styleId,
-          imageUrl: referenceImageUrl,
-          promptAddon: "" // 暂不启用补充
+          style: styleMap[styleId] || styleId,
+          imageBase64: referenceImageUrl,
+          prompt: "" // 暂不启用补充
         }),
       });
       
@@ -118,22 +130,22 @@ export const PortraitPage: React.FC<PortraitPageProps> = ({ onPromptSelect, imag
         throw new Error(data?.error || `HTTP ${res.status}`);
       }
       
-      if (!data?.image) {
+      if (!data?.images || !Array.isArray(data.images) || data.images.length === 0) {
         console.error('[PORTRAIT] invalid payload:', data);
-        throw new Error('No image url in response');
+        throw new Error('No images in response');
       }
       
       const newResult = {
         id: Date.now().toString(),
-        url: data.image,
+        url: data.images[0],
         styleId: styleId,
         ts: Date.now()
       };
       setResults(prev => [newResult, ...prev]);
       
       // 更新父组件状态
-      onImageUpdate(data.image);
-      onPromptSelect(data.prompt || '');
+      onImageUpdate(data.images[0]);
+      onPromptSelect('');
     } catch (e: any) {
       console.error("[PORTRAIT] generate error:", e);
       alert(e?.message || "生成失败");
