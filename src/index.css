@@ -104,6 +104,14 @@ Glass morphism SaaS theme with dark gradients and yellow accents.
 }
 
 @layer base {
+  html {
+    font-size: 16px;
+  }
+
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  }
+
   * {
     @apply border-border;
   }
@@ -112,7 +120,6 @@ Glass morphism SaaS theme with dark gradients and yellow accents.
     @apply bg-background text-foreground;
     background: var(--gradient-main);
     min-height: 100vh;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
 
   /* Backdrop blur utility */
@@ -181,9 +188,9 @@ Glass morphism SaaS theme with dark gradients and yellow accents.
 .page-container {
   margin-left: auto;
   margin-right: auto;
-  max-width: 72rem;   /* 1152px，与主容器 6xl 保持一致 */
-  padding-left: 1.5rem; /* 与主容器 px-6 保持一致 */
-  padding-right: 1.5rem;
+  max-width: 80rem;   /* 1280px，screen-xl 断点 */
+  padding-left: 1rem; /* px-4 */
+  padding-right: 1rem;
 }
 
 /* 统一外框：与 Dock 共用，避免双重内边距导致错位 */

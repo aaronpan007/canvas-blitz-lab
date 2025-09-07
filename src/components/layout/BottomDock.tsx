@@ -18,7 +18,7 @@ interface BottomDockProps {
   anchorRef?: React.MutableRefObject<HTMLDivElement | null>;
   value: string;
   onChange: (value: string) => void;
-  onGenerate: (prompt: string) => void;
+  onGenerate: (prompt: string, imageBase64?: string) => void;
   onResult?: (url: string) => void;
   lastImageUrl?: string;                  // 父级传入：上一条模型图片
   onSubmit?: (text: string) => void;      // 父级：将用户消息推入对话
@@ -37,7 +37,6 @@ export function BottomDock({ anchorRef, value, onChange, onGenerate, onResult, l
   const [refFile, setRefFile] = useState<File | null>(null);
   const [showCanvas, setShowCanvas] = useState(false);
   const [useCanvas, setUseCanvas] = useState(false);
-  const [genLoading, setGenLoading] = useState(false);
   const editorRef = useRef<Editor | null>(null);
   
   useLayoutEffect(() => {
@@ -160,86 +159,27 @@ export function BottomDock({ anchorRef, value, onChange, onGenerate, onResult, l
     // 调用父级回调，将用户消息推入对话
     onSubmit?.(text);
     
-    setGenLoading(true);
-    try {
-      // 处理附加图片 - 如果有base64图片，只取第一个
-      let imageBase64 = null;
-      if (attachedImages.length > 0 && attachedImages[0].startsWith('data:')) {
-        imageBase64 = attachedImages[0];
-      }
-      
-      const payload = { prompt: text, ...(imageBase64 ? { imageBase64 } : {}) };
-      
-      if (process.env.NODE_ENV !== 'production') {
-        console.debug('[gen] req', payload);
-      }
-      
-      const res = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      
-      const data = await res.json().catch(() => ({}));
-      
-      if (process.env.NODE_ENV !== 'production') {
-        console.debug('[gen] res', res.status, data);
-      }
-      
-      if (!res.ok) {
-        const msg = data?.error || `HTTP ${res.status}`;
-        showError(`Generate failed: ${msg}`);
-        return;
-      }
-      
-      // 统一解析：后端应该返回 { images: string[] }，但做容错
-      let images = [];
-      if (Array.isArray(data?.images)) {
-        images = data.images.flat().filter(Boolean);
-      } else if (typeof data === 'string') {
-        images = [data];
-      } else if (Array.isArray(data)) {
-        images = data.flat().filter(Boolean);
-      }
-      
-      if (!images.length) {
-        showError('No images returned');
-        return;
-      }
-      
-      // 将图片插入到对话流
-      images.forEach((url) => {
-        onResult?.(url);
-      });
-      
-      // 生成成功后清空引用图片状态
-      setAttachedImages([]);
-      setRefFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    } catch (err) {
-      if (process.env.NODE_ENV !== 'production') {
-        console.error('[gen] err', err);
-      }
-      showError(String(err?.message || err));
-    } finally {
-      setGenLoading(false);
-      // 清空输入
-      onChange("");
+    // 处理附加图片 - 如果有base64图片，只取第一个
+    let imageBase64 = undefined;
+    if (attachedImages.length > 0 && attachedImages[0].startsWith('data:')) {
+      imageBase64 = attachedImages[0];
     }
+    
+    // 调用父级的统一生成函数
+    onGenerate(text, imageBase64);
+    
+    // 生成后清空引用图片状态
+    setAttachedImages([]);
+    setRefFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    
+    // 清空输入
+    onChange("");
   };
   
-  // 错误显示函数
-  const showError = (message: string) => {
-    // 使用项目现有的toast系统
-    import('sonner').then(({ toast }) => {
-      toast.error(message);
-    }).catch(() => {
-      // 如果toast不可用，使用console
-      console.error('Generation error:', message);
-    });
-  };
+
 
   const removeImage = (index: number) => {
     setAttachedImages(prev => prev.filter((_, i) => i !== index));
@@ -250,7 +190,7 @@ export function BottomDock({ anchorRef, value, onChange, onGenerate, onResult, l
       {/* 固定定位外层：宽度与左边界实时跟随主容器 */}
       <div 
         className="fixed bottom-6 z-50 pointer-events-none"
-        style={{ left, width, maxWidth: "100vw" }}
+        style={{ left, width, maxWidth: "80rem" }}
       >
         <div ref={dockInnerRef} className="pointer-events-auto w-full">
             {/* Attached Images Preview */}
@@ -347,24 +287,15 @@ export function BottomDock({ anchorRef, value, onChange, onGenerate, onResult, l
                   {/* Generate Button */}
                   <Button
                     onClick={handleGenerateClick}
-                    disabled={genLoading}
                     className={cn(
                       "px-6 h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl transition-all",
-                      "shadow-glow-yellow hover:shadow-glow-yellow",
-                      genLoading && "animate-pulse"
+                      "shadow-glow-yellow hover:shadow-glow-yellow"
                     )}
                   >
-                    {genLoading ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                        GENERATING
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Send className="w-4 h-4" />
-                        GENERATE
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <Send className="w-4 h-4" />
+                      GENERATE
+                    </div>
                   </Button>
                 </div>
               </div>

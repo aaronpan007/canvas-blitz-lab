@@ -23,6 +23,10 @@ export default function Dashboard() {
   // Portrait功能的独立状态管理
   const [portraitImages, setPortraitImages] = useState<string[]>([]);
   
+  // General页面的统一状态管理
+  const [modelResponse, setModelResponse] = useState<string>("");
+  const [generalImages, setGeneralImages] = useState<string[]>([]);
+  
   function pushUser(text: string) {
     setThread(prev => [...prev, { id: crypto.randomUUID(), role: "user", text }]);
   }
@@ -39,84 +43,79 @@ export default function Dashboard() {
     setPrompt(promptText);
   };
 
-  const handleGenerate = async (prompt: string, imageBase64?: string) => {
-    if (!prompt.trim()) return;
-    
-    setIsGenerating(true);
-    
-    // 添加用户消息
-    const userMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: 'user',
-      text: prompt,
-      createdAt: new Date().toISOString(),
-    };
-    setThread(prev => [...prev, userMessage]);
-    
+  // 统一生成入口（仅调用 /api/generate）
+  async function handleGenerate({ prompt, imageBase64 }: {
+    prompt: string;
+    imageBase64?: string;
+  }) {
     try {
+      setIsGenerating(true);
+      setModelResponse("Generating...");
       const payload = { prompt, ...(imageBase64 ? { imageBase64 } : {}) };
-      
-      if (process.env.NODE_ENV !== 'production') {
-        console.debug('[gen] req', payload);
-      }
-      
       const res = await fetch('/api/generate', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       });
-      
-      const data = await res.json().catch(() => ({}));
-      
-      if (process.env.NODE_ENV !== 'production') {
-        console.debug('[gen] res', res.status, data);
-      }
-      
+      let data: any = null;
+      try { data = await res.json(); } catch { data = null; }
+
       if (!res.ok) {
-        const msg = data?.error || `HTTP ${res.status}`;
+        const msg = data?.error || data?.detail || `HTTP ${res.status}`;
+        setGeneralImages([]);
+        setModelResponse(`Generate failed: ${msg}`);
         showError(`Generate failed: ${msg}`);
         return;
       }
-      
-      // 统一解析：后端应该返回 { images: string[] }，但做容错
-      let images = [];
-      if (Array.isArray(data?.images)) {
-        images = data.images.flat().filter(Boolean);
-      } else if (typeof data === 'string') {
-        images = [data];
-      } else if (Array.isArray(data)) {
-        images = data.flat().filter(Boolean);
-      }
-      
+
+      // 统一解析：支持 {images:string[]} 或 {image:string}
+      let images: string[] = [];
+      if (Array.isArray(data?.images)) images = data.images.filter(Boolean);
+      else if (typeof data?.image === 'string') images = [data.image];
+
       if (!images.length) {
-        showError('No images returned');
+        setGeneralImages([]);
+        setModelResponse('No images returned');
         return;
       }
-      
-      // 将图片插入到对话流
-      images.forEach((url) => {
-        const assistantMessage: ChatMessage = {
+
+      setGeneralImages(images);
+      setModelResponse(`Generated ${images.length} image(s).`);
+
+      // 如果是对话模式，也添加到对话流
+      if (thread.length > 0) {
+        // 添加用户消息
+        const userMessage: ChatMessage = {
           id: crypto.randomUUID(),
-          role: 'assistant',
-          type: 'image',
-          url,
+          role: 'user',
+          text: prompt,
           createdAt: new Date().toISOString(),
         };
-        setThread(prev => [...prev, assistantMessage]);
-      });
+        setThread(prev => [...prev, userMessage]);
+        
+        // 将图片插入到对话流
+        images.forEach((url) => {
+          const assistantMessage: ChatMessage = {
+            id: crypto.randomUUID(),
+            role: 'assistant',
+            type: 'image',
+            url,
+            createdAt: new Date().toISOString(),
+          };
+          setThread(prev => [...prev, assistantMessage]);
+        });
+      }
       
       toast.success('图片生成成功！');
-    } catch (err) {
-      if (process.env.NODE_ENV !== 'production') {
-        console.error('[gen] err', err);
-      }
+    } catch (err: any) {
+      setGeneralImages([]);
+      setModelResponse(String(err?.message || err));
+      console.error('[gen] err', err);
       showError(String(err?.message || err));
     } finally {
       setIsGenerating(false);
     }
-  };
+  }
   
   // 错误显示函数
   const showError = (message: string) => {
@@ -189,6 +188,8 @@ export default function Dashboard() {
           onPromptSelect={handlePromptSelect} 
           images={images}
           onImageUpdate={(url) => setImages(p => [url, ...p.filter(u => u !== url)].slice(0, 6))}
+          modelResponse={modelResponse}
+          generalImages={generalImages}
         />;
     }
   };
@@ -213,7 +214,7 @@ export default function Dashboard() {
           <div 
             data-dock-anchor
             ref={mainRef} 
-            className="mx-auto max-w-5xl w-full px-6"
+            className="container mx-auto px-4 max-w-screen-xl w-full"
             style={{ paddingBottom: "calc(var(--dock-h, 180px) + var(--dock-gap, 24px))" }}
           >
             {renderActiveFeature()}
@@ -227,7 +228,7 @@ export default function Dashboard() {
           anchorRef={mainRef}
           value={prompt}
           onChange={setPrompt}
-          onGenerate={handleGenerate}
+          onGenerate={(prompt: string, imageBase64?: string) => handleGenerate({ prompt, imageBase64 })}
           onResult={(url) => {
             handleResult(url);
             pushAssistant(url);

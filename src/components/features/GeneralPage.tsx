@@ -17,9 +17,11 @@ interface GeneralPageProps {
   onPromptSelect: (prompt: string) => void;
   images: string[];
   onImageUpdate: (url: string) => void;
+  modelResponse: string;
+  generalImages: string[];
 }
 
-export function GeneralPage({ onPromptSelect, images, onImageUpdate }: GeneralPageProps) {
+export function GeneralPage({ onPromptSelect, images, onImageUpdate, modelResponse, generalImages }: GeneralPageProps) {
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const latest = images[0];
 
@@ -68,7 +70,33 @@ export function GeneralPage({ onPromptSelect, images, onImageUpdate }: GeneralPa
 
 
 
+      {/* Model Response */}
+      {modelResponse && (
+        <div className="mt-8 w-full max-w-4xl mx-auto px-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4 text-center">Model Response</h3>
+          <div className="glass-morph p-4 rounded-xl text-center text-muted-foreground">
+            {modelResponse}
+          </div>
+        </div>
+      )}
+
       {/* Generated Images Grid */}
+      {generalImages && generalImages.length > 0 && (
+        <div className="mt-4 w-full max-w-4xl mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {generalImages.map((url, i) => (
+              <div key={i} className="relative group rounded-xl overflow-hidden bg-neutral-900">
+                <img src={url} alt={`result-${i}`} loading="lazy" className="w-full h-auto object-cover" />
+                <a href={url} download={`result-${i}.png`} 
+                   className="absolute right-2 bottom-2 opacity-0 group-hover:opacity-100 transition 
+                              text-xs px-2 py-1 rounded bg-black/60">Download</a>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recent Generations */}
       {images.length > 1 && (
         <div className="mt-10 w-full max-w-4xl mx-auto px-6 pb-8">
           <h3 className="text-lg font-semibold text-foreground mb-4 text-center">Recent Generations</h3>
