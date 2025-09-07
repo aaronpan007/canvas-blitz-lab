@@ -42,7 +42,7 @@ export function GeneralPage({ onPromptSelect, images, onImageUpdate, modelRespon
 
       {/* Hidden Preset Chips - can be enabled later if needed */}
       {false && (
-        <div className="w-full max-w-3xl mx-auto px-6">
+        <div className="container mx-auto px-4 max-w-screen-lg md:max-w-screen-xl">
           <h2 className="text-lg font-semibold text-foreground mb-6 text-center">
             Quick Start Presets
           </h2>
@@ -72,7 +72,7 @@ export function GeneralPage({ onPromptSelect, images, onImageUpdate, modelRespon
 
       {/* Model Response */}
       {modelResponse && (
-        <div className="mt-8 w-full max-w-4xl mx-auto px-6">
+        <div className="mt-8 container mx-auto px-4 max-w-screen-lg md:max-w-screen-xl">
           <h3 className="text-lg font-semibold text-foreground mb-4 text-center">Model Response</h3>
           <div className="glass-morph p-4 rounded-xl text-center text-muted-foreground">
             {modelResponse}
@@ -82,7 +82,7 @@ export function GeneralPage({ onPromptSelect, images, onImageUpdate, modelRespon
 
       {/* Generated Images Grid */}
       {generalImages && generalImages.length > 0 && (
-        <div className="mt-4 w-full max-w-4xl mx-auto px-6">
+        <div className="mt-4 container mx-auto px-4 max-w-screen-lg md:max-w-screen-xl">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {generalImages.map((url, i) => (
               <div key={i} className="relative group rounded-xl overflow-hidden bg-neutral-900">
@@ -98,7 +98,7 @@ export function GeneralPage({ onPromptSelect, images, onImageUpdate, modelRespon
 
       {/* Recent Generations */}
       {images.length > 1 && (
-        <div className="mt-10 w-full max-w-4xl mx-auto px-6 pb-8">
+        <div className="mt-10 container mx-auto px-4 max-w-screen-lg md:max-w-screen-xl pb-8">
           <h3 className="text-lg font-semibold text-foreground mb-4 text-center">Recent Generations</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {images.slice(1).map((url, i) => (

@@ -26,6 +26,24 @@ export default function Dashboard() {
   // General页面的统一状态管理
   const [modelResponse, setModelResponse] = useState<string>("");
   const [generalImages, setGeneralImages] = useState<string[]>([]);
+
+  // 工具函数：标准化图片URL，处理base64前缀兜底
+  function normalizeImageUrl(x: any): string {
+    if (!x) return '';
+    if (typeof x === 'string') {
+      const s = x.trim();
+      if (s.startsWith('http')) return s;
+      if (s.startsWith('data:image')) return s;
+      // 很长的base64串（无前缀）=> 加上data:image/png;base64,
+      if (/^[A-Za-z0-9+/]+={0,2}$/.test(s.slice(0, 100)) && s.length > 1000) {
+        return `data:image/png;base64,${s}`;
+      }
+      return s;
+    }
+    if (Array.isArray(x) && x[0]) return normalizeImageUrl(x[0]);
+    if (x?.url) return normalizeImageUrl(x.url);
+    return '';
+  }
   
   function pushUser(text: string) {
     setThread(prev => [...prev, { id: crypto.randomUUID(), role: "user", text }]);
@@ -50,70 +68,56 @@ export default function Dashboard() {
   }) {
     try {
       setIsGenerating(true);
-      setModelResponse("Generating...");
-      const payload = { prompt, ...(imageBase64 ? { imageBase64 } : {}) };
+      setModelResponse?.('Generating...');
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ prompt, ...(imageBase64 ? { imageBase64 } : {}) })
       });
       let data: any = null;
       try { data = await res.json(); } catch { data = null; }
+      console.debug('[gen] res', res.status, data);
 
       if (!res.ok) {
         const msg = data?.error || data?.detail || `HTTP ${res.status}`;
-        setGeneralImages([]);
-        setModelResponse(`Generate failed: ${msg}`);
-        showError(`Generate failed: ${msg}`);
+        setModelResponse?.(`Generate failed: ${msg}`);
+        showError?.(`Generate failed: ${msg}`);
         return;
       }
 
-      // 统一解析：支持 {images:string[]} 或 {image:string}
-      let images: string[] = [];
-      if (Array.isArray(data?.images)) images = data.images.filter(Boolean);
-      else if (typeof data?.image === 'string') images = [data.image];
+      // 统一提取并标准化图片
+      const raw = data?.images ?? data?.image ?? data?.output ?? data;
+      const arr = Array.isArray(raw) ? raw : [raw];
+      const images = arr.map(normalizeImageUrl).filter(Boolean);
 
       if (!images.length) {
-        setGeneralImages([]);
-        setModelResponse('No images returned');
+        setModelResponse?.('No images returned');
         return;
       }
 
-      setGeneralImages(images);
-      setModelResponse(`Generated ${images.length} image(s).`);
-
-      // 如果是对话模式，也添加到对话流
-      if (thread.length > 0) {
-        // 添加用户消息
-        const userMessage: ChatMessage = {
+      // A) 聊天流插入图片（如果有消息流）
+      images.forEach((url: string) => {
+        const assistantMessage: ChatMessage = {
           id: crypto.randomUUID(),
-          role: 'user',
-          text: prompt,
+          role: 'assistant',
+          type: 'image',
+          url,
           createdAt: new Date().toISOString(),
         };
-        setThread(prev => [...prev, userMessage]);
-        
-        // 将图片插入到对话流
-        images.forEach((url) => {
-          const assistantMessage: ChatMessage = {
-            id: crypto.randomUUID(),
-            role: 'assistant',
-            type: 'image',
-            url,
-            createdAt: new Date().toISOString(),
-          };
-          setThread(prev => [...prev, assistantMessage]);
-        });
-      }
-      
+        setThread(prev => [...prev, assistantMessage]);
+      });
+
+      // B) 结果面板显示图片
+      setGeneralImages?.(images);
+      setModelResponse?.(`Generated ${images.length} image(s).`);
+
       toast.success('图片生成成功！');
     } catch (err: any) {
-      setGeneralImages([]);
-      setModelResponse(String(err?.message || err));
       console.error('[gen] err', err);
-      showError(String(err?.message || err));
+      setModelResponse?.(String(err?.message || err));
+      showError?.(String(err?.message || err));
     } finally {
-      setIsGenerating(false);
+      setIsGenerating?.(false);
     }
   }
   
@@ -132,22 +136,13 @@ export default function Dashboard() {
   const renderActiveFeature = () => {
     switch (activeFeature) {
       case "general":
-        // 对话模式：无消息时显示 Hero，有消息时显示对话
-        if (thread.length === 0) {
-          return <GeneralPage 
-            onPromptSelect={handlePromptSelect} 
-            images={images}
-            onImageUpdate={(url) => setImages(p => [url, ...p.filter(u => u !== url)].slice(0, 6))}
-          />;
-        } else {
-          return (
-            <div className="w-full space-y-8">
-              <ChatThread items={thread} />
-              {/* 尾部 Spacer 占位元素 */}
-              <div style={{ height: "calc(var(--dock-h, 180px) + var(--dock-gap, 24px))" }} />
-            </div>
-          );
-        }
+        return <GeneralPage 
+          onPromptSelect={handlePromptSelect} 
+          images={images}
+          onImageUpdate={(url) => setImages(p => [url, ...p.filter(u => u !== url)].slice(0, 6))}
+          modelResponse={modelResponse}
+          generalImages={generalImages}
+        />;
       case "portrait":
         return (
           <PortraitPage

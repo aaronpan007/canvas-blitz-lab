@@ -3,11 +3,11 @@ import React from "react";
 export default function HeroMinimal() {
   return (
     // 向上移动，为下方广告区块留出空间
-    <section className="page-container pt-16 sm:pt-20 pb-4">
+    <section className="container mx-auto px-4 max-w-screen-lg md:max-w-screen-xl pt-16 sm:pt-20 pb-4">
       <div
           className="
             relative mx-auto w-full max-w-5xl
-            min-h-[40vh] md:min-h-[50vh]      /* 保守的响应式高度 */
+            min-h-[30vh] md:min-h-[40vh]      /* 保守的响应式高度 */
             rounded-[28px] overflow-hidden
             shadow-[0_30px_80px_-20px_rgba(0,0,0,0.55)]
           "
@@ -37,7 +37,7 @@ export default function HeroMinimal() {
           <div className="flex flex-col items-center gap-2 sm:gap-3 text-center">
             <h1 className="text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]
                             font-extrabold tracking-tight
-                            text-4xl md:text-5xl lg:text-6xl
+                            text-3xl md:text-5xl
                             leading-tight whitespace-nowrap">
               Everything Starts <span className="text-yellow-400">Here</span>
             </h1>

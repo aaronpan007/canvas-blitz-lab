@@ -173,10 +173,10 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({ onPromptSelect, images, 
   };
 
   return (
-    <div className="mx-auto max-w-[1120px] px-6 pt-12 pb-16">
+    <div className="container mx-auto px-4 max-w-screen-lg md:max-w-screen-xl pt-12 pb-16">
       {/* Header */}
       <header className="text-center mb-8">
-        <h1 className="text-2xl font-semibold text-white">Avatar Generator</h1>
+        <h1 className="text-3xl md:text-5xl font-semibold text-white">Avatar Generator</h1>
         <p className="text-white/60 text-sm mt-2">Create stunning AI-generated avatars with custom styles</p>
       </header>
 

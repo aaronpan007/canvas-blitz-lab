@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useAnchorRect } from "@/hooks/useAnchorRect";
+import { toast } from "sonner";
 import { 
   Sparkles, 
   Plus, 
@@ -71,13 +72,17 @@ export function BottomDock({ anchorRef, value, onChange, onGenerate, onResult, l
         body: JSON.stringify({ prompt }),
       });
       
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data?.error || data?.detail || `HTTP ${response.status}`);
+      }
+      
       if (data?.prompt) {
         setPrompt(data.prompt);
+        toast('Prompt polished by GPT-5');
       }
-    } catch (error) {
-      console.error('Polish failed:', error);
-      // 出错时保持原文本不变
+    } catch (error: any) {
+      toast(`Polish failed: ${error.message || error}`);
     } finally {
       setIsPolishing(false);
     }
