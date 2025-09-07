@@ -13,11 +13,21 @@ export default async function handler(req: any, res: any) {
   try {
     // 检查环境变量
     const apiToken = process.env.REPLICATE_API_TOKEN;
+    const model = process.env.REPLICATE_MODEL;
+    
     if (!apiToken) {
       console.error('[API] Missing REPLICATE_API_TOKEN environment variable');
       return res.status(500).json({
         error: 'Server configuration error', 
         detail: 'REPLICATE_API_TOKEN not configured'
+      });
+    }
+    
+    if (!model) {
+      console.error('[API] Missing REPLICATE_MODEL environment variable');
+      return res.status(500).json({
+        error: 'Server configuration error', 
+        detail: 'REPLICATE_MODEL not configured'
       });
     }
 
@@ -59,11 +69,11 @@ export default async function handler(req: any, res: any) {
       }
     }
 
-    console.log('[API] Calling Replicate with model: google/nano-banana');
+    console.log('[API] Calling Replicate with model:', model);
     console.log('[API] Input:', { ...input, image_input: input.image_input ? '[IMAGE_URLS]' : undefined });
 
-    // 调用Replicate模型 - 使用现有代码中的准确模型标识
-    const output = await replicate.run('google/nano-banana', { input });
+    // 调用Replicate模型 - 使用环境变量中的模型标识
+    const output = await replicate.run(model as `${string}/${string}`, { input });
     
     console.log('[API] Replicate output:', output);
 
