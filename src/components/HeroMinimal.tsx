@@ -2,12 +2,12 @@ import React from "react";
 
 export default function HeroMinimal() {
   return (
-    // 大量向下移动，底部收紧
-    <section className="page-container pt-32 sm:pt-40 pb-6">
+    // 向上移动，为下方广告区块留出空间
+    <section className="page-container pt-16 sm:pt-20 pb-4">
       <div
         className="
           relative mx-auto w-full max-w-5xl
-          aspect-[16/7]                       /* 更大更扁，整体更饱满 */
+          h-56 sm:h-64 md:h-72 lg:h-80      /* 响应式高度断点 */
           rounded-[28px] overflow-hidden
           shadow-[0_30px_80px_-20px_rgba(0,0,0,0.55)]
         "
@@ -37,20 +37,20 @@ export default function HeroMinimal() {
           <div className="flex flex-col items-center gap-2 sm:gap-3 text-center">
             <h1 className="text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]
                             font-extrabold tracking-tight
-                            text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl
+                            text-3xl sm:text-4xl md:text-5xl lg:text-6xl
                             leading-tight whitespace-nowrap">
               Everything Starts <span className="text-yellow-400">Here</span>
             </h1>
             <p className="text-neutral-200/90 drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]
-                          text-base sm:text-lg md:text-xl lg:text-2xl">
+                          text-sm sm:text-base md:text-lg lg:text-xl">
               Enter a prompt and create your first masterpiece
             </p>
           </div>
         </div>
       </div>
 
-      {/* 底部留白更小，由 Dock 接管 */}
-      <div className="h-4 sm:h-6" />
+      {/* 底部留白进一步缩小 */}
+      <div className="h-2 sm:h-3" />
     </section>
   );
 }

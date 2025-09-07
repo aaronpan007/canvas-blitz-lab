@@ -4,11 +4,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { X, Upload, Sparkles, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PORTRAIT_STYLES } from "@/features/portrait/data/styles";
 
-interface AvatarPromptInputProps {
+interface PortraitPromptInputProps {
   onGenerate: (prompt: string, referenceImages: string[]) => void;
   isGenerating: boolean;
 }
+
+const styles = PORTRAIT_STYLES;
 
 const quickPrompts = [
   "professional headshot",
@@ -19,7 +22,7 @@ const quickPrompts = [
   "cartoon avatar"
 ];
 
-const AvatarPromptInput: React.FC<AvatarPromptInputProps> = ({ onGenerate, isGenerating }) => {
+const PortraitPromptInput: React.FC<PortraitPromptInputProps> = ({ onGenerate, isGenerating }) => {
   const [prompt, setPrompt] = useState("");
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -182,4 +185,4 @@ const AvatarPromptInput: React.FC<AvatarPromptInputProps> = ({ onGenerate, isGen
   );
 };
 
-export default AvatarPromptInput;
+export default PortraitPromptInput;

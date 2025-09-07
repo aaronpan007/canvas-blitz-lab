@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import heroImage from "@/assets/hero-example.jpg";
 import HeroMinimal from "@/components/HeroMinimal";
+import AdCard from "@/components/AdCard";
 
 const presetPrompts = [
   { id: "poster", label: "Product Poster", prompt: "Modern product poster with clean typography and professional lighting" },
@@ -28,9 +29,14 @@ export function GeneralPage({ onPromptSelect, images, onImageUpdate }: GeneralPa
   };
 
   return (
-    <div className="h-full">
+    <div className="h-full pb-[calc(env(safe-area-inset-bottom)+88px)] md:pb-24">
       {/* Hero Section */}
       <HeroMinimal />
+
+      {/* 广告区块 */}
+      <div className="py-8">
+        <AdCard />
+      </div>
 
       {/* Hidden Preset Chips - can be enabled later if needed */}
       {false && (
@@ -64,7 +70,7 @@ export function GeneralPage({ onPromptSelect, images, onImageUpdate }: GeneralPa
 
       {/* Generated Images Grid */}
       {images.length > 1 && (
-        <div className="mt-10 w-full max-w-4xl mx-auto px-6">
+        <div className="mt-10 w-full max-w-4xl mx-auto px-6 pb-8">
           <h3 className="text-lg font-semibold text-foreground mb-4 text-center">Recent Generations</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {images.slice(1).map((url, i) => (

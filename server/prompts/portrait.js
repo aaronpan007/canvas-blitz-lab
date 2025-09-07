@@ -1,7 +1,7 @@
-// Avatar风格提示词配置
+// Portrait风格提示词配置
 // 每个风格包含详细的提示词，用于生成特定风格的头像
 
-export const AVATAR_STYLE_PROMPTS = {
+export const PORTRAIT_STYLE_PROMPTS = {
   mono: `A completely new artistic reconstruction of a black-and-white portrait, ignoring the original photograph's background and pose.
 The subject is depicted in a new, introspective posture, captured in a moment of pensive thought, with their face artfully obscured or turned away to evoke mystery and elegance. Their form is sculpted by a single, gentle, directional soft light, creating exquisite highlights and deep, velvety shadows that define their contours and evoke a melancholic, poetic beauty.
 The background is a newly generated, softly graduated, ethereal gradient, completely devoid of any physical objects, establishing immense depth and a profoundly silent atmosphere. This creates a powerful sense of isolation and focus on the subject.
@@ -20,7 +20,10 @@ The composition is an upper-body shot, focusing intimately on the subject, with 
 
   indoor: `A cozy and intimate indoor lifestyle portrait. The setting is a comfortable, personal space like a sun-drenched bedroom or a rustic living room, filled with natural light streaming from a window. The subject is in a relaxed, candid moment, perhaps reading a book or enjoying a quiet cup of coffee. The lighting is soft and gentle, creating a warm, inviting glow. The composition is natural and easy, highlighting the genuine atmosphere of the moment. The colors are soft and muted, evoking a sense of tranquility and contentment.`,
 
-  film: `A beautiful full-color portrait with a classic film aesthetic. The image has a subtle, delicate film grain that gives it a tangible, vintage feel. The colors are slightly muted and have a natural, organic warmth. The light is soft and inviting, and the composition is focused on the subject's sincere expression. The overall style is timeless and full of emotional depth, like a well-preserved photograph from a bygone era.`,
+  film: `A completely reimagined and freshly generated full-color portrait with a classic film aesthetic. Disregard the original photograph's background and pose. 
+ The image is captured in a candid, unposed moment, and infused with an authentic, organic film grain, subtle light leaks, and a touch of halation around highlights. The colors are carefully balanced to be either warmly nostalgic or quietly desaturated, creating a timeless, cinematic tone. 
+ The subject is depicted with a sincere and natural expression, in a thoughtful or gentle pose within an evocative, mood-setting environment. The lighting is narrative-driven, creating a compelling interplay of light and shadow to sculpt their features and enhance the scene's emotional depth. 
+ The composition is dynamic and full of life, feeling like a genuine analog photograph from any era. No text, no logos—just pure, reconstructed form, expression, and the enduring charm of a powerful visual story.`,
 
   business: `A meticulously crafted professional studio portrait. The subject is a confident and composed professional, positioned against a clean, uncluttered solid color backdrop (e.g., charcoal gray, dark blue, or off-white). The lighting is expertly controlled, featuring a soft key light to gently sculpt the face, while a subtle fill light ensures no harsh shadows. The subject is dressed in sharp, classic business attire, exuding an air of sophistication and approachability. The shot is a tight headshot or upper-body portrait, focusing on the subject's clear gaze and sincere expression. The overall style is clean, modern, and high-resolution, with a shallow depth of field to keep the focus entirely on the person.`
 };

@@ -5,7 +5,7 @@ import cors from "cors";
 import multer from "multer";
 import Replicate from "replicate";
 import { existsSync } from "fs";
-import avatarRouter from "./routes/avatar.js";
+import portraitRouter from "./routes/portrait.js";
 
 // 显式加载环境变量，兼容 .env.local
 try {
@@ -37,8 +37,8 @@ app.use((req, _res, next) => {
   next();
 });
 
-// 挂载 Avatar 路由
-app.use("/api/avatar", express.json({ limit: "10mb" }), avatarRouter);
+// 挂载 Portrait 路由
+app.use("/api/portrait", express.json({ limit: "10mb" }), portraitRouter);
 
 // ---- /api/polish：用 Replicate 的 LLM 做"润色"（可选） ----
 app.post("/api/polish", async (req, res) => {

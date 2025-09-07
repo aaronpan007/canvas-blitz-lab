@@ -3,7 +3,8 @@ import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { BottomDock } from "@/components/layout/BottomDock";
 import { GeneralPage } from "@/components/features/GeneralPage";
-import { AvatarPage } from "@/features/avatar/AvatarPage";
+import { PortraitPage } from "@/features/portrait/PortraitPage";
+
 import ChatThread, { ChatMessage } from "@/components/ChatThread";
 import { toast } from "sonner";
 
@@ -18,8 +19,8 @@ export default function Dashboard() {
   const lastAssistant = [...thread].reverse().find(m => m.role === "assistant") as any;
   const lastImageUrl = lastAssistant?.imageUrl as string | undefined;
   
-  // Avatar功能的独立状态管理
-  const [avatarImages, setAvatarImages] = useState<string[]>([]);
+  // Portrait功能的独立状态管理
+  const [portraitImages, setPortraitImages] = useState<string[]>([]);
   
   function pushUser(text: string) {
     setThread(prev => [...prev, { id: crypto.randomUUID(), role: "user", text }]);
@@ -84,12 +85,14 @@ export default function Dashboard() {
             </div>
           );
         }
-      case "avatar":
-        return <AvatarPage 
-          onPromptSelect={handlePromptSelect} 
-          images={avatarImages}
-          onImageUpdate={(url) => setAvatarImages(p => [url, ...p.filter(u => u !== url)].slice(0, 12))}
-        />;
+      case "portrait":
+        return (
+          <PortraitPage
+            onPromptSelect={setPrompt}
+            images={portraitImages}
+            onImageUpdate={(url) => setPortraitImages(p => [url, ...p.filter(u => u !== url)].slice(0, 12))}
+          />
+        );
       case "try-on":
         return (
           <div className="flex items-center justify-center h-full">
@@ -154,8 +157,8 @@ export default function Dashboard() {
         </main>
       </div>
 
-      {/* Bottom Dock - 仅在非Avatar页面显示 */}
-      {activeFeature !== "avatar" && (
+      {/* Bottom Dock - 仅在非Portrait页面显示 */}
+        {activeFeature !== "portrait" && (
         <BottomDock 
           anchorRef={mainRef}
           value={prompt}

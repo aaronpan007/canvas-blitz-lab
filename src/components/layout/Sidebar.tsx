@@ -18,7 +18,7 @@ interface SidebarItem {
 
 const sidebarItems: SidebarItem[] = [
   { id: "general", label: "General", icon: Sparkles, isActive: true },
-  { id: "avatar", label: "Avatar Generation", icon: User },
+  { id: "portrait", label: "Portrait Generation", icon: User },
   { id: "try-on", label: "Clothing Try-on", icon: Shirt },
   { id: "vector", label: "Vector Graphics", icon: Shapes },
   { id: "more", label: "More Features", icon: MoreHorizontal },

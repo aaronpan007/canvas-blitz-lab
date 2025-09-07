@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+
 import { 
   Sparkles, 
   User,
@@ -9,19 +10,19 @@ import {
   Wand2
 } from "lucide-react";
 
-interface AvatarPromptInputProps {
+interface PortraitPromptInputProps {
   value: string;
   onChange: (value: string) => void;
   onGenerate: () => void;
   loading?: boolean;
 }
 
-export default function AvatarPromptInput({ 
+export default function PortraitPromptInput({ 
   value, 
   onChange, 
   onGenerate, 
   loading = false 
-}: AvatarPromptInputProps) {
+}: PortraitPromptInputProps) {
   const [referenceImage, setReferenceImage] = useState<string | null>(null);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,18 +60,9 @@ export default function AvatarPromptInput({
     }
   };
 
-  const quickPrompts = [
-    "professional headshot",
-    "friendly smile",
-    "artistic portrait",
-    "casual style",
-    "elegant look"
-  ];
 
-  const addQuickPrompt = (prompt: string) => {
-    const newValue = value ? `${value}, ${prompt}` : prompt;
-    onChange(newValue);
-  };
+  
+  // 快速提示词已删除
 
   return (
     <div className="w-full space-y-4">
@@ -99,20 +91,7 @@ export default function AvatarPromptInput({
         </div>
       )}
 
-      {/* Quick Prompt Chips */}
-      <div className="flex flex-wrap gap-2">
-        {quickPrompts.map((prompt, index) => (
-          <Button
-            key={index}
-            variant="outline"
-            size="sm"
-            onClick={() => addQuickPrompt(prompt)}
-            className="glass-morph border-glass-border hover:bg-glass-hover text-xs glow-blue"
-          >
-            + {prompt}
-          </Button>
-        ))}
-      </div>
+      {/* 快速提示词标签已删除 */}
 
       {/* Main Input Area */}
       <div className="glass-morph rounded-xl p-4 glow-blue">

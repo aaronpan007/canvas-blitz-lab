@@ -1,13 +1,13 @@
-// Avatar风格模板定义
+// Portrait风格模板定义
 // 每个模板包含预设的稳定提示词，用于生成特定风格的头像
 
-export interface AvatarTemplate {
+export interface PortraitTemplate {
   id: string;
   label: string;
   prompt: string;
 }
 
-export const AVATAR_TEMPLATES: AvatarTemplate[] = [
+export const PORTRAIT_TEMPLATES: PortraitTemplate[] = [
   {
     id: "mono",
     label: "Mono",
