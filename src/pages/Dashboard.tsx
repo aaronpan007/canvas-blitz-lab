@@ -25,7 +25,6 @@ export default function Dashboard() {
   
   // General页面的统一状态管理
   const [modelResponse, setModelResponse] = useState<string>("");
-  const [generalImages, setGeneralImages] = useState<string[]>([]);
 
   // 工具函数：标准化图片URL，处理base64前缀兜底
   function normalizeImageUrl(x: any): string {
@@ -34,15 +33,25 @@ export default function Dashboard() {
       const s = x.trim();
       if (s.startsWith('http')) return s;
       if (s.startsWith('data:image')) return s;
-      // 很长的base64串（无前缀）=> 加上data:image/png;base64,
-      if (/^[A-Za-z0-9+/]+={0,2}$/.test(s.slice(0, 100)) && s.length > 1000) {
+      // 大概率是裸 base64：加上前缀
+      if (/^[A-Za-z0-9+/]+={0,2}$/.test(s.slice(0,120)) && s.length > 1000) {
         return `data:image/png;base64,${s}`;
       }
       return s;
     }
-    if (Array.isArray(x) && x[0]) return normalizeImageUrl(x[0]);
+    if (Array.isArray(x)) return normalizeImageUrl(x[0]);
     if (x?.url) return normalizeImageUrl(x.url);
+    if (x?.base64) return `data:image/png;base64,${x.base64}`;
     return '';
+  }
+
+  // 从各种返回结构里"抠出"图片数组
+  function extractImages(data: any): string[] {
+    // 常见字段：images / image / output / result / data
+    const candidates = [data?.images, data?.image, data?.output, data?.result, data?.data, data];
+    const arr = candidates.find(v => Array.isArray(v)) ?? candidates.find(v => typeof v === 'string') ?? [];
+    const list = Array.isArray(arr) ? arr : (typeof arr === 'string' ? [arr] : []);
+    return list.map(normalizeImageUrl).filter(Boolean);
   }
   
   function pushUser(text: string) {
@@ -85,17 +94,13 @@ export default function Dashboard() {
         return;
       }
 
-      // 统一提取并标准化图片
-      const raw = data?.images ?? data?.image ?? data?.output ?? data;
-      const arr = Array.isArray(raw) ? raw : [raw];
-      const images = arr.map(normalizeImageUrl).filter(Boolean);
-
+      const images = extractImages(data);
       if (!images.length) {
-        setModelResponse?.('No images returned');
+        setModelResponse?.('No images returned'); // 真没拿到时才显示
         return;
       }
 
-      // A) 聊天流插入图片（如果有消息流）
+      // —— 将图片插回"对话流" ——
       images.forEach((url: string) => {
         const assistantMessage: ChatMessage = {
           id: crypto.randomUUID(),
@@ -107,10 +112,7 @@ export default function Dashboard() {
         setThread(prev => [...prev, assistantMessage]);
       });
 
-      // B) 结果面板显示图片
-      setGeneralImages?.(images);
       setModelResponse?.(`Generated ${images.length} image(s).`);
-
       toast.success('图片生成成功！');
     } catch (err: any) {
       console.error('[gen] err', err);
@@ -128,20 +130,14 @@ export default function Dashboard() {
 
 
 
-  const handleResult = (imageUrl: string) => {
-    setImages(p => [imageUrl, ...p].slice(0, 6));
-    toast.success("Image generated successfully!");
-  };
+
 
   const renderActiveFeature = () => {
     switch (activeFeature) {
       case "general":
         return <GeneralPage 
           onPromptSelect={handlePromptSelect} 
-          images={images}
-          onImageUpdate={(url) => setImages(p => [url, ...p.filter(u => u !== url)].slice(0, 6))}
           modelResponse={modelResponse}
-          generalImages={generalImages}
         />;
       case "portrait":
         return (
@@ -179,13 +175,24 @@ export default function Dashboard() {
           </div>
         );
       default:
-        return <GeneralPage 
-          onPromptSelect={handlePromptSelect} 
-          images={images}
-          onImageUpdate={(url) => setImages(p => [url, ...p.filter(u => u !== url)].slice(0, 6))}
-          modelResponse={modelResponse}
-          generalImages={generalImages}
-        />;
+        return (
+          <div className="flex gap-6 h-full">
+            <div className="flex-1">
+              <GeneralPage 
+                onPromptSelect={handlePromptSelect} 
+                modelResponse={modelResponse}
+              />
+            </div>
+            <div className="w-96 flex-shrink-0">
+              <div className="h-full glass-morph rounded-xl p-4">
+                <h3 className="text-lg font-semibold mb-4 text-foreground">Chat History</h3>
+                <ChatThread 
+                   items={thread} 
+                 />
+              </div>
+            </div>
+          </div>
+        );
     }
   };
 
@@ -224,10 +231,6 @@ export default function Dashboard() {
           value={prompt}
           onChange={setPrompt}
           onGenerate={(prompt: string, imageBase64?: string) => handleGenerate({ prompt, imageBase64 })}
-          onResult={(url) => {
-            handleResult(url);
-            pushAssistant(url);
-          }}
           lastImageUrl={lastImageUrl}
           onSubmit={pushUser}
 

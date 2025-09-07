@@ -15,15 +15,11 @@ const presetPrompts = [
 
 interface GeneralPageProps {
   onPromptSelect: (prompt: string) => void;
-  images: string[];
-  onImageUpdate: (url: string) => void;
   modelResponse: string;
-  generalImages: string[];
 }
 
-export function GeneralPage({ onPromptSelect, images, onImageUpdate, modelResponse, generalImages }: GeneralPageProps) {
+export function GeneralPage({ onPromptSelect, modelResponse }: GeneralPageProps) {
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
-  const latest = images[0];
 
   const handlePresetClick = (preset: typeof presetPrompts[0]) => {
     setSelectedPreset(preset.id);
@@ -80,39 +76,7 @@ export function GeneralPage({ onPromptSelect, images, onImageUpdate, modelRespon
         </div>
       )}
 
-      {/* Generated Images Grid */}
-      {generalImages && generalImages.length > 0 && (
-        <div className="mt-4 container mx-auto px-4 max-w-screen-lg md:max-w-screen-xl">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {generalImages.map((url, i) => (
-              <div key={i} className="relative group rounded-xl overflow-hidden bg-neutral-900">
-                <img src={url} alt={`result-${i}`} loading="lazy" className="w-full h-auto object-cover" />
-                <a href={url} download={`result-${i}.png`} 
-                   className="absolute right-2 bottom-2 opacity-0 group-hover:opacity-100 transition 
-                              text-xs px-2 py-1 rounded bg-black/60">Download</a>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
-      {/* Recent Generations */}
-      {images.length > 1 && (
-        <div className="mt-10 container mx-auto px-4 max-w-screen-lg md:max-w-screen-xl pb-8">
-          <h3 className="text-lg font-semibold text-foreground mb-4 text-center">Recent Generations</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {images.slice(1).map((url, i) => (
-              <img 
-                key={i} 
-                src={url} 
-                alt={`Generated ${i + 1}`}
-                className="w-full h-40 object-cover rounded-xl glass-morph cursor-pointer hover:scale-105 transition-transform duration-300"
-                onClick={() => onImageUpdate(url)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
