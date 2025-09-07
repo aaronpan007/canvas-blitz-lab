@@ -15,7 +15,7 @@ export default function StyleCard({ id, label, imageUrl, selected, onSelect }: P
   const FALLBACK_BG = "linear-gradient(180deg, rgba(50,50,50,.4), rgba(20,20,20,.7))";
 
   return (
-    <div className="relative rounded-2xl overflow-hidden group ring-1 ring-white/8">
+    <div className="relative rounded-2xl overflow-hidden group ring-0 border-none outline-none">
       {/* 背景图 */}
       <div
         className="absolute inset-0 bg-center bg-cover will-change-transform"
@@ -47,7 +47,7 @@ export default function StyleCard({ id, label, imageUrl, selected, onSelect }: P
       <button
         type="button"
         onClick={() => onSelect?.(id)}
-        className="relative z-10 w-full aspect-[16/10] flex items-center justify-center cursor-pointer"
+        className="relative z-10 w-full aspect-[16/10] flex items-center justify-center cursor-pointer focus-visible:ring-yellow-400 focus-visible:ring-2 focus-visible:outline-none"
         aria-pressed={selected}
       >
         <span
@@ -67,11 +67,13 @@ export default function StyleCard({ id, label, imageUrl, selected, onSelect }: P
       {selected && (
         <div
           className="
-            absolute inset-0
-            ring-2 ring-yellow-400/80
-            shadow-[0_0_0_4px_rgba(255,214,0,0.15)_inset]
+            absolute inset-0 z-20
+            ring-2 ring-primary
+            shadow-[0_0_20px_rgba(255,217,61,0.5),0_0_40px_rgba(255,217,61,0.2)]
             backdrop-blur-[0.5px]
-            bg-black/10
+            bg-gradient-to-br from-primary/10 to-primary/5
+            pointer-events-none
+            rounded-2xl
           "
         />
       )}

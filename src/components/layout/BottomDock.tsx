@@ -162,53 +162,83 @@ export function BottomDock({ anchorRef, value, onChange, onGenerate, onResult, l
     
     setGenLoading(true);
     try {
-      // 图像生成模式
       // 处理附加图片 - 如果有base64图片，只取第一个
       let imageBase64 = null;
       if (attachedImages.length > 0 && attachedImages[0].startsWith('data:')) {
         imageBase64 = attachedImages[0];
       }
       
-      const payload = { prompt: text, imageBase64 };
+      const payload = { prompt: text, ...(imageBase64 ? { imageBase64 } : {}) };
       
-      // 开发环境日志
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env.NODE_ENV !== 'production') {
         console.debug('[gen] req', payload);
       }
       
-      const resp = await fetch("/api/generate", { 
-        method: "POST",
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       
-      const data = await resp.json().catch(() => ({}));
+      const data = await res.json().catch(() => ({}));
       
-      // 开发环境日志
-      if (process.env.NODE_ENV === 'development') {
-        console.debug('[gen] res', data);
+      if (process.env.NODE_ENV !== 'production') {
+        console.debug('[gen] res', res.status, data);
       }
       
-      if (data?.images && data.images.length > 0) {
-        // 调用父级回调，将模型图片推入对话
-        onResult?.(data.images[0]);
-      } else {
-        // 失败时在 UI 明确显示错误文本
-        console.error('No images generated');
+      if (!res.ok) {
+        const msg = data?.error || `HTTP ${res.status}`;
+        showError(`Generate failed: ${msg}`);
+        return;
       }
-    } catch (error) {
-      // 开发环境日志
-      if (process.env.NODE_ENV === 'development') {
-        console.error('[gen] err', error);
+      
+      // 统一解析：后端应该返回 { images: string[] }，但做容错
+      let images = [];
+      if (Array.isArray(data?.images)) {
+        images = data.images.flat().filter(Boolean);
+      } else if (typeof data === 'string') {
+        images = [data];
+      } else if (Array.isArray(data)) {
+        images = data.flat().filter(Boolean);
       }
-      console.error('Generation failed:', error);
+      
+      if (!images.length) {
+        showError('No images returned');
+        return;
+      }
+      
+      // 将图片插入到对话流
+      images.forEach((url) => {
+        onResult?.(url);
+      });
+      
+      // 生成成功后清空引用图片状态
+      setAttachedImages([]);
+      setRefFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('[gen] err', err);
+      }
+      showError(String(err?.message || err));
     } finally {
       setGenLoading(false);
       // 清空输入
       onChange("");
     }
+  };
+  
+  // 错误显示函数
+  const showError = (message: string) => {
+    // 使用项目现有的toast系统
+    import('sonner').then(({ toast }) => {
+      toast.error(message);
+    }).catch(() => {
+      // 如果toast不可用，使用console
+      console.error('Generation error:', message);
+    });
   };
 
   const removeImage = (index: number) => {

@@ -9,6 +9,7 @@ export default function PromptDock({ onResult }: { onResult: (url: string) => vo
   const [showCanvas, setShowCanvas] = useState(false); const [useCanvas, setUseCanvas] = useState(false);
   const [loading, setLoading] = useState(false);
   const editorRef = useRef<Editor | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachedImages, setAttachedImages] = useState<string[]>([]);
 
 
@@ -57,25 +58,86 @@ export default function PromptDock({ onResult }: { onResult: (url: string) => vo
     }
   }
   async function handleGenerate() {
-    if (!prompt.trim()) return; setLoading(true);
+    if (!prompt.trim()) return;
     
-    // 处理附加图片 - 如果有base64图片，只取第一个
-    let imageBase64 = null;
-    if (attachedImages.length > 0 && attachedImages[0].startsWith('data:')) {
-      imageBase64 = attachedImages[0];
+    setLoading(true);
+    try {
+      // 处理附加图片 - 如果有base64图片，只取第一个
+      let imageBase64 = null;
+      if (attachedImages.length > 0 && attachedImages[0].startsWith('data:')) {
+        imageBase64 = attachedImages[0];
+      }
+      
+      const payload = { prompt, ...(imageBase64 ? { imageBase64 } : {}) };
+      
+      if (process.env.NODE_ENV !== 'production') {
+        console.debug('[gen] req', payload);
+      }
+      
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      const data = await res.json().catch(() => ({}));
+      
+      if (process.env.NODE_ENV !== 'production') {
+        console.debug('[gen] res', res.status, data);
+      }
+      
+      if (!res.ok) {
+        const msg = data?.error || `HTTP ${res.status}`;
+        showError(`Generate failed: ${msg}`);
+        return;
+      }
+      
+      // 统一解析：后端应该返回 { images: string[] }，但做容错
+      let images = [];
+      if (Array.isArray(data?.images)) {
+        images = data.images.flat().filter(Boolean);
+      } else if (typeof data === 'string') {
+        images = [data];
+      } else if (Array.isArray(data)) {
+        images = data.flat().filter(Boolean);
+      }
+      
+      if (!images.length) {
+        showError('No images returned');
+        return;
+      }
+      
+      // 将图片插入到对话流
+      images.forEach((url) => {
+        onResult(url);
+      });
+      
+      // 生成成功后清空引用图片状态
+      setAttachedImages([]);
+      setFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('[gen] err', err);
+      }
+      showError(String(err?.message || err));
+    } finally {
+      setLoading(false);
     }
-    
-    const data = await fetch("/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt, imageBase64 })
-    }).then(r=>r.json()).catch(()=>({}));
-    
-    if (data?.images && data.images.length > 0) {
-      onResult(data.images[0]);
-    }
-    setLoading(false);
   }
+  
+  // 错误显示函数
+  const showError = (message: string) => {
+    // 使用项目现有的toast系统
+    import('sonner').then(({ toast }) => {
+      toast.error(message);
+    }).catch(() => {
+      // 如果toast不可用，使用console
+      console.error('Generation error:', message);
+    });
+  };
   const removeImage = (index: number) => {
     setAttachedImages(prev => prev.filter((_, i) => i !== index));
   };
@@ -106,7 +168,7 @@ export default function PromptDock({ onResult }: { onResult: (url: string) => vo
       )}
       <div className="w-full p-3 flex items-center gap-2 bg-black/30 rounded-xl border border-yellow-400/20">
       <label className="px-2 py-1 rounded-lg bg-neutral-800 cursor-pointer text-sm">上传参考图
-        <input type="file" accept="image/*" className="hidden" onChange={e => {
+        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={e => {
           const file = e.target.files?.[0];
           if (file) {
             setFile(file);

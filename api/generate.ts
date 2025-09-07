@@ -77,24 +77,11 @@ export default async function handler(req: any, res: any) {
     
     console.log('[API] Replicate output:', output);
 
-    // 处理输出结果 - 统一返回数组格式
-    let images: string[] = [];
+    // 统一输出处理逻辑：将 Replicate 的 output 整理为 string[]
+    // 支持多种返回格式：单个字符串、字符串数组、对象数组、嵌套数组等
+    const arr = Array.isArray(output) ? output : [output];
+    const images = arr.flat().map(x => (typeof x === 'string' ? x : (x?.url || x))).filter(Boolean);
     
-    if (Array.isArray(output)) {
-      // 如果返回数组，直接使用
-      images = output.filter(item => typeof item === 'string');
-    } else if (typeof output === 'string') {
-      // 如果返回单个字符串，包装成数组
-      images = [output];
-    } else if (output && typeof output === 'object') {
-      // 如果返回对象，尝试提取URL
-      const outputObj = output as any;
-      const url = outputObj.url || outputObj.image || String(output);
-      if (url) {
-        images = [url];
-      }
-    }
-
     if (images.length === 0) {
       console.error('[API] No valid image URLs in output:', output);
       return res.status(500).json({
@@ -103,7 +90,7 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    // 返回成功结果
+    // 返回统一格式：{ images: string[] }
     return res.status(200).json({ images });
 
   } catch (error) {

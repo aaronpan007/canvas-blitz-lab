@@ -12,6 +12,7 @@ export default function Dashboard() {
   const [activeFeature, setActiveFeature] = useState("general");
   const [prompt, setPrompt] = useState<string>("");
   const [images, setImages] = useState<string[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
   const mainRef = useRef<HTMLDivElement | null>(null);
   
   // 对话状态管理
@@ -38,27 +39,88 @@ export default function Dashboard() {
     setPrompt(promptText);
   };
 
-  const handleGenerate = async (prompt: string) => {
+  const handleGenerate = async (prompt: string, imageBase64?: string) => {
+    if (!prompt.trim()) return;
+    
+    setIsGenerating(true);
+    
+    // 添加用户消息
+    const userMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      text: prompt,
+      createdAt: new Date().toISOString(),
+    };
+    setThread(prev => [...prev, userMessage]);
+    
     try {
-      toast.success("Generation started!");
-      const response = await fetch('/api/generate', {
+      const payload = { prompt, ...(imageBase64 ? { imageBase64 } : {}) };
+      
+      if (process.env.NODE_ENV !== 'production') {
+        console.debug('[gen] req', payload);
+      }
+      
+      const res = await fetch('/api/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify(payload),
       });
-      const result = await response.json();
-      if (result.images && result.images.length > 0) {
-        setImages(p => [result.images[0], ...p].slice(0, 6));
-        toast.success("Image generated successfully!");
-      } else {
-        toast.error("Failed to generate image");
+      
+      const data = await res.json().catch(() => ({}));
+      
+      if (process.env.NODE_ENV !== 'production') {
+        console.debug('[gen] res', res.status, data);
       }
-    } catch (error) {
-      console.error('Generation failed:', error);
-      toast.error("Generation failed");
+      
+      if (!res.ok) {
+        const msg = data?.error || `HTTP ${res.status}`;
+        showError(`Generate failed: ${msg}`);
+        return;
+      }
+      
+      // 统一解析：后端应该返回 { images: string[] }，但做容错
+      let images = [];
+      if (Array.isArray(data?.images)) {
+        images = data.images.flat().filter(Boolean);
+      } else if (typeof data === 'string') {
+        images = [data];
+      } else if (Array.isArray(data)) {
+        images = data.flat().filter(Boolean);
+      }
+      
+      if (!images.length) {
+        showError('No images returned');
+        return;
+      }
+      
+      // 将图片插入到对话流
+      images.forEach((url) => {
+        const assistantMessage: ChatMessage = {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          type: 'image',
+          url,
+          createdAt: new Date().toISOString(),
+        };
+        setThread(prev => [...prev, assistantMessage]);
+      });
+      
+      toast.success('图片生成成功！');
+    } catch (err) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('[gen] err', err);
+      }
+      showError(String(err?.message || err));
+    } finally {
+      setIsGenerating(false);
     }
+  };
+  
+  // 错误显示函数
+  const showError = (message: string) => {
+    toast.error(message);
   };
 
 
