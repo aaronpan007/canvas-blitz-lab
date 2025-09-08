@@ -31,32 +31,89 @@ export default function Dashboard() {
     setThread(prev => [...prev, message]);
   };
 
-  // 工具函数：标准化图片URL，处理base64前缀兜底
+  // 工具函数：标准化图片URL，处理各种格式
   function normalizeImageUrl(x: any): string {
     if (!x) return '';
+    
+    // 处理字符串类型
     if (typeof x === 'string') {
       const s = x.trim();
-      if (s.startsWith('http')) return s;
-      if (s.startsWith('data:image')) return s;
-      // 大概率是裸 base64：加上前缀
-      if (/^[A-Za-z0-9+/]+={0,2}$/.test(s.slice(0,120)) && s.length > 1000) {
+      if (!s) return '';
+      
+      // HTTP/HTTPS URL
+      if (s.startsWith('http://') || s.startsWith('https://')) return s;
+      
+      // 已有data:image前缀的base64
+      if (s.startsWith('data:image/')) return s;
+      
+      // 裸base64检测：长度>1000且符合base64字符集
+      if (s.length > 1000 && /^[A-Za-z0-9+/]+={0,2}$/.test(s)) {
         return `data:image/png;base64,${s}`;
       }
+      
+      // 其他字符串直接返回（可能是相对路径等）
       return s;
     }
-    if (Array.isArray(x)) return normalizeImageUrl(x[0]);
-    if (x?.url) return normalizeImageUrl(x.url);
-    if (x?.base64) return `data:image/png;base64,${x.base64}`;
+    
+    // 处理数组类型：取第一个有效项
+    if (Array.isArray(x) && x.length > 0) {
+      return normalizeImageUrl(x[0]);
+    }
+    
+    // 处理对象类型：尝试提取url或base64字段
+    if (x && typeof x === 'object') {
+      if (x.url) return normalizeImageUrl(x.url);
+      if (x.base64) return `data:image/png;base64,${x.base64}`;
+      if (x.image) return normalizeImageUrl(x.image);
+    }
+    
     return '';
   }
 
-  // 从各种返回结构里"抠出"图片数组
-  function extractImages(data: any): string[] {
-    // 常见字段：images / image / output / result / data
-    const candidates = [data?.images, data?.image, data?.output, data?.result, data?.data, data];
-    const arr = candidates.find(v => Array.isArray(v)) ?? candidates.find(v => typeof v === 'string') ?? [];
-    const list = Array.isArray(arr) ? arr : (typeof arr === 'string' ? [arr] : []);
-    return list.map(normalizeImageUrl).filter(Boolean);
+  // 响应适配器：处理/api/generate的各种返回格式
+  function adaptGenerateResponse(data: any): string[] {
+    // 开发模式下打印响应结构
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[ResponseAdapter] Raw API response:', JSON.stringify(data, null, 2));
+    }
+
+    // 候选字段按优先级排序：images、image、output、result、data、裸响应
+    const candidateFields = ['images', 'image', 'output', 'result', 'data'];
+    let extractedItems: any[] = [];
+
+    // 1. 尝试从候选字段中提取
+    for (const field of candidateFields) {
+      const value = data?.[field];
+      if (value !== undefined && value !== null) {
+        if (Array.isArray(value)) {
+          extractedItems = value;
+          break;
+        } else if (typeof value === 'string' && value.trim()) {
+          extractedItems = [value];
+          break;
+        }
+      }
+    }
+
+    // 2. 如果候选字段都没有，尝试裸响应
+    if (extractedItems.length === 0) {
+      if (Array.isArray(data)) {
+        extractedItems = data;
+      } else if (typeof data === 'string' && data.trim()) {
+        extractedItems = [data];
+      }
+    }
+
+    // 3. 标准化每个图片项
+    const normalizedUrls = extractedItems
+      .map(item => normalizeImageUrl(item))
+      .filter(url => url && url.length > 0);
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[ResponseAdapter] Extracted ${normalizedUrls.length} valid image URLs:`, normalizedUrls);
+    }
+
+    return normalizedUrls;
   }
   
   function pushUser(text: string) {
@@ -99,13 +156,13 @@ export default function Dashboard() {
         return;
       }
 
-      const images = extractImages(data);
+      const images = adaptGenerateResponse(data);
       if (!images.length) {
-        setModelResponse?.(''); // 改为空字符串，避免误导
+        setModelResponse?.('No images returned');
         return;
       }
 
-      // —— 恢复"对话流展示" ——（沿用 localhost 的消息结构）
+      // 将图片逐条追加为对话消息
       images.forEach((url: string) => addMessage({
         id: crypto.randomUUID(),
         role: 'assistant',
@@ -114,6 +171,7 @@ export default function Dashboard() {
         createdAt: new Date().toISOString(),
       }));
 
+      // Model Response仅显示文字状态
       setModelResponse?.(`Generated ${images.length} image(s).`);
       toast.success('图片生成成功！');
     } catch (err: any) {
